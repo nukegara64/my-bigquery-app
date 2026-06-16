@@ -18,6 +18,9 @@ const elements = {
     spinnerIcon: document.getElementById('spinner-icon'),
     refreshBtnText: document.getElementById('refresh-btn-text'),
     syncStatus: document.getElementById('sync-status'),
+    themeToggle: document.getElementById('theme-toggle'),
+    sunIcon: document.getElementById('sun-icon'),
+    moonIcon: document.getElementById('moon-icon'),
     
     // Share Drawer Elements
     shareDrawer: document.getElementById('share-drawer'),
@@ -35,8 +38,14 @@ const elements = {
 // Initialization & Listeners
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Initial theme setup
+    initializeTheme();
+
     // Initial fetch from backend API
     fetchReleases();
+
+    // Event: Theme toggle clicked
+    elements.themeToggle.addEventListener('click', toggleTheme);
 
     // Event: Refresh button clicked
     elements.refreshBtn.addEventListener('click', () => {
@@ -274,12 +283,28 @@ function renderReleases() {
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
                         </svg>
                     </a>
-                    <span class="share-action-link">
-                        <span>𝕏 で共有</span>
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                        </svg>
-                    </span>
+                    
+                    <div class="card-actions" onclick="event.stopPropagation();">
+                        <button class="action-btn copy-btn" title="クリップボードにコピー" data-id="${release.id}" aria-label="クリップボードにコピー">
+                            <svg class="copy-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                            </svg>
+                            <svg class="check-icon hidden" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </button>
+                        <button class="action-btn csv-btn" title="CSVエクスポート" data-id="${release.id}" aria-label="CSVエクスポート">
+                            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                        </button>
+                        <button class="action-btn x-share-btn" title="𝕏で共有" data-id="${release.id}" aria-label="𝕏で共有">
+                            <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -287,7 +312,9 @@ function renderReleases() {
 
     // Attach click listeners to cards
     document.querySelectorAll('.release-card').forEach(card => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.action-btn') || e.target.closest('.source-link')) return;
+            
             const releaseId = card.dataset.id;
             const release = releases.find(r => r.id === releaseId);
             if (release) {
@@ -300,6 +327,42 @@ function renderReleases() {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 card.click();
+            }
+        });
+    });
+
+    // Attach Copy buttons action
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const releaseId = btn.dataset.id;
+            const release = releases.find(r => r.id === releaseId);
+            if (release) {
+                copyReleaseToClipboard(release, btn);
+            }
+        });
+    });
+
+    // Attach CSV export action
+    document.querySelectorAll('.csv-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const releaseId = btn.dataset.id;
+            const release = releases.find(r => r.id === releaseId);
+            if (release) {
+                exportReleaseToCSV(release);
+            }
+        });
+    });
+
+    // Attach X Share action button
+    document.querySelectorAll('.x-share-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const releaseId = btn.dataset.id;
+            const release = releases.find(r => r.id === releaseId);
+            if (release) {
+                openShareDrawer(release);
             }
         });
     });
@@ -395,4 +458,91 @@ function shareToX() {
     
     // Open Web Intent in new tab/window
     window.open(intentUrl, '_blank', 'noopener,noreferrer');
+}
+
+// ==========================================================================
+// Theme Utilities
+// ==========================================================================
+function initializeTheme() {
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    if (currentTheme === 'light') {
+        document.body.classList.add('light-theme');
+        elements.sunIcon.classList.add('hidden');
+        elements.moonIcon.classList.remove('hidden');
+    }
+}
+
+function toggleTheme() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    
+    if (isLight) {
+        elements.sunIcon.classList.add('hidden');
+        elements.moonIcon.classList.remove('hidden');
+    } else {
+        elements.sunIcon.classList.remove('hidden');
+        elements.moonIcon.classList.add('hidden');
+    }
+}
+
+// ==========================================================================
+// Copy & CSV Utilities
+// ==========================================================================
+function copyReleaseToClipboard(release, btn) {
+    const formattedText = `BigQueryアップデート 【${release.date} | ${release.category.toUpperCase()}】\n${release.details_text}\n詳細: ${release.link}`;
+    
+    navigator.clipboard.writeText(formattedText).then(() => {
+        // Visual micro-feedback
+        btn.classList.add('copied');
+        const copyIcon = btn.querySelector('.copy-icon');
+        const checkIcon = btn.querySelector('.check-icon');
+        
+        if (copyIcon && checkIcon) {
+            copyIcon.classList.add('hidden');
+            checkIcon.classList.remove('hidden');
+        }
+        
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            if (copyIcon && checkIcon) {
+                copyIcon.classList.remove('hidden');
+                checkIcon.classList.add('hidden');
+            }
+        }, 2000);
+    }).catch(err => {
+        console.error('クリップボードへのコピーに失敗しました:', err);
+    });
+}
+
+function exportReleaseToCSV(release) {
+    const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '';
+        const formatted = val.toString().replace(/"/g, '""');
+        return `"${formatted}"`;
+    };
+    
+    // Headers and values row
+    const headers = ['Date', 'Category', 'URL', 'Content'];
+    const row = [release.date, release.category, release.link, release.details_text];
+    
+    // Prefix UTF-8 BOM for Japanese Excel compatibility
+    const csvContent = "\uFEFF" + 
+        headers.map(escapeCSV).join(',') + '\n' +
+        row.map(escapeCSV).join(',');
+        
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    const safeCategoryName = release.category.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const safeDate = release.date.replace(/,?\s+/g, '_');
+    link.setAttribute('download', `bigquery_release_${safeDate}_${safeCategoryName}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }

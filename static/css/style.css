@@ -8,6 +8,8 @@
     --border-card: rgba(255, 255, 255, 0.06);
     --border-card-hover: rgba(255, 255, 255, 0.12);
     --border-active: rgba(139, 92, 246, 0.6);
+    --bg-drawer: #0f172a;
+    --bg-textarea: rgba(0, 0, 0, 0.15);
     
     /* Text Colors */
     --text-primary: #f3f4f6;
@@ -62,6 +64,27 @@
     --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     --shadow-glow: 0 0 25px rgba(139, 92, 246, 0.25);
     --shadow-glow-blue: 0 0 25px rgba(59, 130, 246, 0.25);
+}
+
+body.light-theme {
+    --bg-app: #f8fafc;
+    --bg-card: rgba(255, 255, 255, 0.75);
+    --bg-card-hover: rgba(255, 255, 255, 0.95);
+    --border-card: rgba(0, 0, 0, 0.08);
+    --border-card-hover: rgba(0, 0, 0, 0.14);
+    --border-active: rgba(139, 92, 246, 0.7);
+    --bg-drawer: #ffffff;
+    --bg-textarea: rgba(0, 0, 0, 0.04);
+    
+    /* Text Colors */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    /* Shadows override for better visibility on light background */
+    --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* ==========================================================================
@@ -724,9 +747,9 @@ body {
     width: 100%;
     max-width: 460px;
     height: 100%;
-    background: #0f172a;
-    border-left: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    background: var(--bg-drawer);
+    border-left: 1px solid var(--border-card);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
     z-index: 2;
     display: flex;
     flex-direction: column;
@@ -833,9 +856,9 @@ body {
 
 .textarea-container {
     position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-card);
     border-radius: var(--radius-md);
-    background: rgba(0, 0, 0, 0.15);
+    background: var(--bg-textarea);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -947,3 +970,144 @@ body {
         transform: translateY(0);
     }
 }
+
+/* ==========================================================================
+   Theme & Utilities Overrides
+   ========================================================================== */
+
+/* Light Theme overrides for inputs & chips */
+body.light-theme #search-input {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+body.light-theme #search-input:focus {
+    background: #ffffff;
+}
+
+body.light-theme .logo-container {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .chip {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+body.light-theme .chip:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+body.light-theme .chip.active {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+    color: var(--bg-app);
+}
+
+body.light-theme ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+}
+body.light-theme ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* Theme Toggle Button Styling */
+.btn-theme-toggle {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+body.light-theme .btn-theme-toggle {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .btn-theme-toggle:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Card actions toolbar in card footer */
+.card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    transform: scale(1.1);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.action-btn.copied {
+    color: var(--color-feature) !important;
+    border-color: var(--border-feature) !important;
+    background: var(--bg-feature) !important;
+}
+
+body.light-theme .action-btn {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-theme .action-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .drawer-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+body.light-theme .selected-note-preview {
+    background: rgba(0, 0, 0, 0.01);
+    border-color: rgba(0, 0, 0, 0.04);
+}
+body.light-theme .btn-x-post {
+    background: #0f172a;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+body.light-theme .btn-x-post:hover {
+    background: #1e293b;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
