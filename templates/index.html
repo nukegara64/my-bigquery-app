@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Pulse - Release Notes Hub</title>
+    <meta name="description" content="Google Cloud BigQueryの最新リリースノートを美しくトラッキングし、𝕏 (Twitter) で手軽に共有できるWebアプリケーション。">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="logo-container">
+                    <svg class="gcp-logo" viewBox="0 0 24 24" width="36" height="36">
+                        <!-- Custom Google Cloud inspired logo with a glowing center -->
+                        <path fill="#4285F4" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                        <path fill="#34A853" d="M19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z" opacity="0.15"/>
+                        <circle cx="12" cy="12" r="4.5" fill="url(#logo-gradient)"/>
+                        <defs>
+                            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#a142f4" />
+                                <stop offset="100%" stop-color="#f442b0" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>BigQuery Pulse</h1>
+                    <span class="sub-logo">Release Hub</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <span id="sync-status" class="sync-status">同期済み</span>
+                <button id="refresh-btn" class="btn btn-primary" aria-label="リリースノートを更新">
+                    <span class="btn-icon">
+                        <!-- Default Static Refresh Icon -->
+                        <svg id="refresh-icon" class="icon" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        </svg>
+                        <!-- Spinning Loader Icon (Hidden by default) -->
+                        <svg id="spinner-icon" class="spinner hidden" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.15" fill="none"></circle>
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" fill="none"></path>
+                        </svg>
+                    </span>
+                    <span id="refresh-btn-text" class="btn-text">更新する</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="app-main">
+            <!-- Search & Filters Toolbar -->
+            <section class="toolbar">
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="アップデートの内容、日付、キーワードで検索..." aria-label="検索">
+                    <button id="clear-search" class="clear-btn hidden" aria-label="検索ワードをクリア" style="display: none;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="filters-wrapper">
+                    <span class="filter-label">カテゴリー:</span>
+                    <div class="filter-chips" id="filter-chips">
+                        <button class="chip active" data-category="all">すべて</button>
+                        <button class="chip" data-category="feature">Feature</button>
+                        <button class="chip" data-category="change">Change</button>
+                        <button class="chip" data-category="issue">Issue</button>
+                        <button class="chip" data-category="breaking">Breaking</button>
+                        <button class="chip" data-category="announcement">Announcement</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cards Grid Layout -->
+            <section class="releases-section">
+                <!-- No Results State -->
+                <div id="no-results" class="no-results hidden" style="display: none;">
+                    <div class="no-results-icon">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.3-4.3M8 11h6"></path>
+                        </svg>
+                    </div>
+                    <h3>該当するアップデートが見つかりません</h3>
+                    <p>キーワードを変えるか、他のカテゴリーのフィルターを選択してみてください。</p>
+                </div>
+                
+                <div id="releases-grid" class="releases-grid">
+                    <!-- Skeletons shown during initial fetch -->
+                    <div class="skeleton-card">
+                        <div class="skeleton-header">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line short"></div>
+                        </div>
+                        <div class="skeleton-footer"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-header">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line short"></div>
+                        </div>
+                        <div class="skeleton-footer"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-header">
+                            <div class="skeleton-badge"></div>
+                            <div class="skeleton-date"></div>
+                        </div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line"></div>
+                            <div class="skeleton-line short"></div>
+                        </div>
+                        <div class="skeleton-footer"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Floating Side/Bottom Sharing Drawer -->
+        <div id="share-drawer" class="share-drawer">
+            <div class="drawer-backdrop" id="drawer-backdrop"></div>
+            <div class="drawer-content">
+                <div class="drawer-header">
+                    <div class="drawer-title-group">
+                        <svg class="drawer-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <h3>𝕏 (Twitter) にポスト</h3>
+                    </div>
+                    <button id="close-drawer" class="close-drawer-btn" aria-label="閉じる">
+                        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="drawer-body">
+                    <!-- Selected Card Info Card -->
+                    <div class="selected-note-preview">
+                        <div class="meta-row">
+                            <span id="drawer-note-badge" class="badge badge-feature">FEATURE</span>
+                            <span id="drawer-note-date" class="date-text">June 15, 2026</span>
+                        </div>
+                        <p id="drawer-note-text" class="note-preview-text">Note details...</p>
+                    </div>
+
+                    <!-- Post Composer Box -->
+                    <div class="post-composer">
+                        <label for="post-textarea">ポストの編集</label>
+                        <div class="textarea-container">
+                            <textarea id="post-textarea" rows="5" placeholder="投稿内容を編集..."></textarea>
+                            <div class="char-counter">
+                                <span id="char-count">0</span> / 280
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button id="tweet-btn" class="btn btn-x-post">
+                        <svg class="x-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span>𝕏 にポストする</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 BigQuery Pulse. Powered by Google Cloud RSS Feed.</p>
+        </footer>
+    </div>
+
+    <!-- App JavaScript -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
